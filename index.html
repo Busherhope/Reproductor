@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Much Longer? — reproductor</title>
+<style>
+  :root{
+    --bg:#040405;
+    --panel:#0c0c0f;
+    --line-dim:#4a4a52;
+    --line-past:#6f6f78;
+    --line-active:#f5f2ee;
+    --accent-a:#c9a3ff;
+    --accent-b:#ff9db6;
+    --accent-c:#8fd7ff;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:radial-gradient(120% 120% at 20% 0%, #101014 0%, #040405 55%);
+    color:var(--line-active);
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:24px;
+  }
+
+  .app{
+    width:100%;
+    max-width:1100px;
+    height:min(700px,90vh);
+    background:var(--panel);
+    border-radius:28px;
+    display:grid;
+    grid-template-columns:1fr 1.3fr;
+    overflow:hidden;
+    box-shadow:0 40px 100px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.04);
+  }
+
+  /* ---------- LADO IZQUIERDO: PORTADA ---------- */
+  .cover-side{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:48px 40px;
+    background:
+      radial-gradient(80% 60% at 50% 0%, rgba(201,163,255,.15), transparent 60%),
+      linear-gradient(180deg,#0a0a0d,#050506);
+  }
+
+  .cover-art{
+    width:78%;
+    aspect-ratio:1/1;
+    border-radius:16px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 30px 60px rgba(0,0,0,.55);
+    background-image:url('assets/portada.jpg');
+    background-size:cover;
+    background-position:center;
+  }
+
+  .track-title{
+    margin-top:28px;
+    font-size:20px;
+    font-weight:700;
+    text-align:center;
+    letter-spacing:-.01em;
+  }
+  .track-artist{
+    margin-top:6px;
+    font-size:14px;
+    color:var(--line-past);
+    text-align:center;
+  }
+
+  /* ---------- controles ---------- */
+  .controls{
+    width:100%;
+    margin-top:36px;
+  }
+  .seek{
+    -webkit-appearance:none;
+    width:100%;
+    height:4px;
+    border-radius:2px;
+    background:linear-gradient(90deg,var(--accent-a) var(--progress,0%),rgba(255,255,255,.15) 0);
+    outline:none;
+    cursor:pointer;
+    touch-action:none;
+  }
+  .seek::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;border-radius:50%;
+    background:#fff;
+    box-shadow:0 0 0 4px rgba(255,255,255,.08);
+  }
+  .seek::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;
+    background:#fff;border:none;
+    box-shadow:0 0 0 4px rgba(255,255,255,.08);
+  }
+  .time-row{
+    display:flex;justify-content:space-between;
+    font-size:11px;color:var(--line-past);
+    margin-top:6px;
+    font-variant-numeric:tabular-nums;
+  }
+  .transport{
+    display:flex;align-items:center;justify-content:center;
+    gap:28px;
+    margin-top:18px;
+  }
+  .transport button{
+    background:none;border:none;color:var(--line-active);
+    cursor:pointer;padding:6px;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .transport button:hover{opacity:.75;}
+  .transport button:active{transform:scale(.9);}
+  #playBtn{
+    width:52px;height:52px;border-radius:50%;
+    background:var(--line-active);color:#000;
+  }
+  #playBtn svg{width:20px;height:20px;}
+  .transport svg{width:22px;height:22px;}
+
+  /* ---------- LADO DERECHO: LETRA ---------- */
+  .lyrics-side{
+    position:relative;
+    padding:0 56px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+  }
+  .lyrics-side::before,
+  .lyrics-side::after{
+    content:"";
+    position:absolute;left:0;right:0;height:120px;
+    z-index:2;pointer-events:none;
+  }
+  .lyrics-side::before{top:0;background:linear-gradient(var(--panel),transparent);}
+  .lyrics-side::after{bottom:0;background:linear-gradient(transparent,var(--panel));}
+
+  .lyrics-scroll{
+    width:100%;
+    max-height:100%;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding:44% 0;
+  }
+  .lyrics-scroll::-webkit-scrollbar{display:none;}
+
+  .lyric-line{
+    font-size:26px;
+    font-weight:700;
+    line-height:1.5;
+    color:var(--line-dim);
+    filter:blur(2px);
+    transform-origin:left center;
+    transform:scale(.94);
+    transition:color .4s ease, filter .4s ease, transform .4s ease, opacity .4s ease;
+    padding:6px 0;
+    opacity:.5;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .lyric-line.past{color:var(--line-past);filter:blur(0);opacity:.55;transform:scale(.97);}
+  .lyric-line.active{
+    color:var(--line-active);
+    filter:blur(0);
+    opacity:1;
+    transform:scale(1.04);
+    background:linear-gradient(90deg,var(--accent-a),var(--accent-b) 60%,var(--accent-c));
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  .hint{
+    position:absolute;
+    top:18px;right:24px;
+    font-size:11px;
+    color:var(--line-dim);
+    z-index:3;
+    max-width:260px;
+    text-align:right;
+    line-height:1.4;
+  }
+
+  @media (max-width:760px){
+    body{
+      padding:0;
+      align-items:stretch;
+      min-height:100dvh;
+    }
+    .app{
+      grid-template-columns:1fr;
+      grid-template-rows:auto 1fr;
+      width:100%;
+      height:100dvh;
+      max-height:none;
+      border-radius:0;
+    }
+    .cover-side{
+      padding:28px 24px 20px;
+      flex-shrink:0;
+    }
+    .cover-art{width:56%;max-width:220px;}
+    .track-title{font-size:18px;margin-top:20px;}
+    .track-artist{font-size:13px;}
+    .controls{margin-top:22px;}
+    .transport{gap:24px;}
+    #playBtn{width:48px;height:48px;}
+    .lyrics-side{
+      padding:0 24px 24px;
+      min-height:0;
+    }
+    .lyrics-scroll{padding:40% 0;}
+    .lyric-line{font-size:20px;line-height:1.45;}
+    .hint{
+      position:static;
+      display:block;
+      max-width:none;
+      text-align:left;
+      margin-bottom:10px;
+    }
+  }
+
+  @media (max-width:400px){
+    .cover-art{width:48%;max-width:180px;}
+    .lyric-line{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===== IZQUIERDA: PORTADA + CONTROLES ===== -->
+  <div class="cover-side">
+    <div class="cover-art"></div>
+    <div class="track-title">How Much Longer?</div>
+    <div class="track-artist">Alexander 23</div>
+
+    <div class="controls">
+      <input type="range" class="seek" id="seek" value="0" min="0" max="100" step="0.1">
+      <div class="time-row">
+        <span id="curTime">0:00</span>
+        <span id="durTime">0:00</span>
+      </div>
+      <div class="transport">
+        <button id="prevBtn" title="Anterior">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l9-6v12z"/></svg>
+        </button>
+        <button id="playBtn" title="Reproducir">
+          <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button id="nextBtn" title="Siguiente">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4.5 6l9 6-9 6z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DERECHA: LETRA SINCRONIZADA ===== -->
+  <div class="lyrics-side">
+    <div class="hint">Un regalito que hice para ti c:</div>
+    <div class="lyrics-scroll" id="lyricsScroll"></div>
+  </div>
+
+</div>
+
+<audio id="audio" src="assets/how-much-longer.mp3" preload="auto"></audio></audio>
+
+<script>
+  const LYRICS_EN = [
+    { time: 14,   text: "Lo intento tanto" },
+    { time: 17,   text: "¿Te he asustado?" },
+    { time: 23,   text: "Cuando lo deseo con todas mis fuerzas" },
+    { time: 30,  text: "me pongo trabas a mí mismo." },
+
+    { time: 36,  text: "Y te prometo con el meñique" },
+    { time: 41,  text: "que puedo ser la persona de la que" },
+    { time: 44,  text: "te enamoraste." },
+    { time: 47,  text: "Pero, si soy sincero," },
+
+    { time: 53,  text: "no veo hacia dónde correr." },
+    { time: 60,  text: "¿Dónde te has ido, amor?" },
+    { time: 63,  text: "¿Cómo te he perdido?" },
+    { time: 66,  text: "¿Te he hecho daño?" },
+    { time: 68,  text: "¿Estás enfadada?" },
+    { time: 72,  text: "No hay nada que," },
+    { time: 74,  text: "no haría,amor" },
+    { time: 77,  text: "para recuperar lo que teníamos." },
+
+    { time: 84,  text: "Y esperaría hasta el" },
+    { time: 86,  text: "fin de los tiempos" },
+    { time: 89,  text: "si me aceptaras," },
+    { time: 92,  text: "con el corazón en la mano." },
+
+    { time: 96,  text: "¿Y cuánto tiempo más puedo quererte" },
+    { time: 102,  text: "cuando, cariño, tú no me quieres?" },
+    { time: 119,  text: "Necesito saberlo" },
+    { time: 123,  text: "¿Estoy empeorando las cosas?" },
+
+    { time: 129, text: "Porque mi corazón roto" },
+    { time: 135, text: "Nunca ha sufrido tanto" },
+    { time: 140, text: "Oh, y te lo prometo con el meñique (oh, oh, oh-oh)" },
+    { time: 148, text: "Puedo ser de quien te enamoraste (oh, oh, oh-oh)" },
+    { time: 154, text: "Pero si soy sincero (oh, oh, oh-oh)" },
+    { time: 160, text: "No veo hacia dónde correr (oh, oh)" },
+    { time: 166, text: "¿Adónde te has ido, amor?" },
+    { time: 169, text: "¿Cómo te he perdido?" },
+
+    { time: 172, text: "¿Te he hecho daño?" },
+    { time: 175, text: "¿Estás enfadada?" },
+    { time: 178, text: "No hay nada que no haría, amor" },
+    { time: 184, text: "Para recuperar lo que teníamos" },
+    { time: 190, text: "Y esperaría hasta el fin de los tiempos" },
+    { time: 196, text: "Si me aceptaras, con el corazón en la mano" },
+    { time: 202, text: "¿Y cuánto tiempo más puedo quererte" },
+    { time: 208, text: "Cuando, cariño, tú no me quieres?" },
+    { time: 214, text: "¿Y cuánto tiempo más puedo quererte" },
+    { time: 219, text: "Cuando, cariño, tú no me quieres?" },
+  ];
+
+  const LYRICS = LYRICS_EN;
+
+  const audio = document.getElementById('audio');
+  const playBtn = document.getElementById('playBtn');
+  const playIcon = document.getElementById('playIcon');
+  const seek = document.getElementById('seek');
+  const curTimeEl = document.getElementById('curTime');
+  const durTimeEl = document.getElementById('durTime');
+  const scrollWrap = document.getElementById('lyricsScroll');
+
+  const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
+  const ICON_PAUSE = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+
+  // Construye las líneas de letra en el DOM
+  LYRICS.forEach((line, i) => {
+    const div = document.createElement('div');
+    div.className = 'lyric-line';
+    div.textContent = line.text;
+    div.dataset.index = i;
+    div.addEventListener('click', () => {
+      audio.currentTime = line.time;
+      if (audio.paused) togglePlay();
+    });
+    scrollWrap.appendChild(div);
+  });
+  const lineEls = [...scrollWrap.querySelectorAll('.lyric-line')];
+
+  function fmt(t){
+    if (!isFinite(t)) return "0:00";
+    const m = Math.floor(t/60);
+    const s = Math.floor(t%60).toString().padStart(2,'0');
+    return `${m}:${s}`;
+  }
+
+  function togglePlay(){
+    if (audio.paused){
+      audio.play().catch(()=>{});
+      playIcon.innerHTML = ICON_PAUSE;
+    } else {
+      audio.pause();
+      playIcon.innerHTML = ICON_PLAY;
+    }
+  }
+  playBtn.addEventListener('click', togglePlay);
+
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    audio.currentTime = Math.max(0, audio.currentTime - 10);
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    audio.currentTime = Math.min(audio.duration||0, audio.currentTime + 10);
+  });
+
+  audio.addEventListener('loadedmetadata', () => {
+    seek.max = audio.duration;
+    durTimeEl.textContent = fmt(audio.duration);
+  });
+
+  // ---------- CONTROL DE LA BARRA (arreglo de conflicto táctil) ----------
+  // Mientras el usuario está tocando/arrastrando la barra, el audio se
+  // mueve al instante con cada movimiento del dedo, pero dejamos de dejar
+  // que "timeupdate" le pise el valor a la barra mientras tanto — eso era
+  // lo que hacía que se sintiera trabada.
+  let isSeeking = false;
+
+  const seekStart = () => { isSeeking = true; };
+  const seekEnd = () => { isSeeking = false; };
+
+  seek.addEventListener('input', () => {
+    if (!audio.duration) return;
+    const target = parseFloat(seek.value);
+
+    // Diagnóstico: revisa si el punto al que se quiere saltar ya está
+    // descargado. Si no lo está, el salto puede no sonar aunque la barra
+    // y la letra sí se muevan (esto confirma si es un tema de conexión).
+    let buffered = false;
+    for (let i=0; i<audio.buffered.length; i++){
+      if (target >= audio.buffered.start(i) && target <= audio.buffered.end(i)){
+        buffered = true; break;
+      }
+    }
+    if (!buffered){
+      console.warn('Saltando a un punto NO descargado todavía:', target.toFixed(2));
+    }
+
+    audio.currentTime = target;
+    const pct = (target/audio.duration)*100;
+    seek.style.setProperty('--progress', pct + '%');
+    curTimeEl.textContent = fmt(target);
+  });
+
+  // Confirma en consola cuando el navegador realmente completó el salto,
+  // útil para diagnosticar si el archivo de audio permite "seek" bien.
+  audio.addEventListener('seeked', () => {
+    console.log('Audio saltó realmente a:', audio.currentTime.toFixed(2));
+  });
+  audio.addEventListener('error', (e) => {
+    console.error('Error de audio:', audio.error);
+  });
+
+  seek.addEventListener('mousedown', seekStart);
+  seek.addEventListener('touchstart', seekStart, { passive: true });
+  seek.addEventListener('mouseup', seekEnd);
+  seek.addEventListener('touchend', seekEnd);
+  seek.addEventListener('change', seekEnd);
+
+  let activeIndex = -1;
+
+  // ---------- CONTROL DE LA LETRA (arreglo de conflicto táctil) ----------
+  // Mientras el usuario está tocando/desplazando la lista de letras a mano,
+  // no forzamos el auto-scroll hacia la línea activa (eso era lo que se
+  // sentía "bugueado": el scroll automático competía con el dedo).
+  let userTouchingLyrics = false;
+  let userScrollTimeout = null;
+
+  scrollWrap.addEventListener('touchstart', () => {
+    userTouchingLyrics = true;
+    if (userScrollTimeout) clearTimeout(userScrollTimeout);
+  }, { passive: true });
+
+  scrollWrap.addEventListener('touchend', () => {
+    // damos un margen antes de retomar el auto-scroll,
+    // para no pelear con el "impulso" final del dedo
+    userScrollTimeout = setTimeout(() => { userTouchingLyrics = false; }, 1200);
+  });
+
+  function updateActiveLine(t){
+    let idx = 0;
+    for (let i=0;i<LYRICS.length;i++){
+      if (t >= LYRICS[i].time) idx = i; else break;
+    }
+    if (idx !== activeIndex){
+      activeIndex = idx;
+      lineEls.forEach((el,i) => {
+        el.classList.remove('active','past');
+        if (i < idx) el.classList.add('past');
+        if (i === idx) el.classList.add('active');
+      });
+      const activeEl = lineEls[idx];
+      if (activeEl && !userTouchingLyrics){
+        activeEl.scrollIntoView({ block:'center', behavior:'smooth' });
+      }
+    }
+  }
+
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration) return;
+    if (!isSeeking){
+      seek.value = audio.currentTime;
+      const pct = (audio.currentTime/audio.duration)*100;
+      seek.style.setProperty('--progress', pct + '%');
+    }
+    curTimeEl.textContent = fmt(audio.currentTime);
+    updateActiveLine(audio.currentTime);
+  });
+
+  audio.addEventListener('ended', () => {
+    playIcon.innerHTML = ICON_PLAY;
+  });
+</script>
+</body>
+</html>
