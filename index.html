@@ -119,7 +119,7 @@
   .back-btn:active{background:rgba(255,255,255,.16);}
   .back-btn svg{width:18px;height:18px;}
 
-  /* ---------- LADO IZQUIERDO: Portada ---------- */
+  /* ---------- LADO IZQUIERDO: PORTADA ---------- */
   .cover-side{
     position:relative;
     display:flex;
@@ -343,7 +343,7 @@
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 4l-8 8 8 8 1.5-1.5L10.5 12l6.5-6.5z"/></svg>
     </button>
 
-    <!-- IZQUIERDA: Portada + CONTROLES -->
+    <!-- IZQUIERDA: PORTADA + CONTROLES -->
     <div class="cover-side">
       <div class="cover-art" id="coverArt"></div>
       <div class="track-title" id="trackTitle"></div>
@@ -384,7 +384,7 @@
   // =====================================================================
   //  1) TUS CANCIONES VAN AQUÍ
   //  Cada canción es un objeto con: id, title, artist, cover, audio, lyrics
-  //  - cover y audio son rutas dentro de /Assets (sube ahí tus archivos)
+  //  - cover y audio son rutas dentro de /assets (sube ahí tus archivos)
   //  - lyrics sigue el mismo formato de siempre: { time, text }
   //  Para agregar una canción nueva, copia un bloque { ... } completo,
   //  cámbiale el id (único), y pon tus propios datos.
@@ -401,12 +401,10 @@
         { time: 17,   text: "¿Te he asustado?" },
         { time: 23,   text: "Cuando lo deseo con todas mis fuerzas" },
         { time: 30,  text: "me pongo trabas a mí mismo." },
-
         { time: 36,  text: "Y te prometo con el meñique" },
         { time: 41,  text: "que puedo ser la persona de la que" },
         { time: 44,  text: "te enamoraste." },
         { time: 47,  text: "Pero, si soy sincero," },
-
         { time: 53,  text: "no veo hacia dónde correr." },
         { time: 60,  text: "¿Dónde te has ido, amor?" },
         { time: 63,  text: "¿Cómo te he perdido?" },
@@ -415,17 +413,14 @@
         { time: 72,  text: "No hay nada que," },
         { time: 74,  text: "no haría,amor" },
         { time: 77,  text: "para recuperar lo que teníamos." },
-
         { time: 84,  text: "Y esperaría hasta el" },
         { time: 86,  text: "fin de los tiempos" },
         { time: 89,  text: "si me aceptaras," },
         { time: 92,  text: "con el corazón en la mano." },
-
         { time: 96,  text: "¿Y cuánto tiempo más puedo quererte" },
         { time: 102,  text: "cuando, cariño, tú no me quieres?" },
         { time: 119,  text: "Necesito saberlo" },
         { time: 123,  text: "¿Estoy empeorando las cosas?" },
-
         { time: 129, text: "Porque mi corazón roto" },
         { time: 135, text: "Nunca ha sufrido tanto" },
         { time: 140, text: "Oh, y te lo prometo con el meñique (oh, oh, oh-oh)" },
@@ -434,7 +429,6 @@
         { time: 160, text: "No veo hacia dónde correr (oh, oh)" },
         { time: 166, text: "¿Adónde te has ido, amor?" },
         { time: 169, text: "¿Cómo te he perdido?" },
-
         { time: 172, text: "¿Te he hecho daño?" },
         { time: 175, text: "¿Estás enfadada?" },
         { time: 178, text: "No hay nada que no haría, amor" },
@@ -444,32 +438,20 @@
         { time: 202, text: "¿Y cuánto tiempo más puedo quererte" },
         { time: 208, text: "Cuando, cariño, tú no me quieres?" },
         { time: 214, text: "¿Y cuánto tiempo más puedo quererte" },
-        { time: 219, text: "Cuando, cariño, tú no me quieres?" }
-        ]
+        { time: 219, text: "Cuando, cariño, tú no me quieres?" },
+      ]
     },
     {
-       id: 'Give-Me-A-Sign',
+      id: 'give-me-a-sign',
       title: 'Give Me a Sign',
       artist: 'Bryant Barnes',
       cover: 'Assets/Portada2.jpg',
-      audio: 'Assets/Give Me A Sign.mp3',
+      audio: 'Assets/Give-Me-A-Sign.mp3',
       lyrics: [
         { time: 14,   text: "Lo intento tanto" },
         { time: 17,   text: "¿Te he asustado?" },
+      ]
     },
-
-    // ---- EJEMPLO: copia este bloque para agregar otra canción ----
-    // {
-    //   id: 'segunda-cancion',
-    //   title: 'Nombre de la canción',
-    //   artist: 'Nombre del artista',
-    //   cover: 'Assets/Portada2.jpg',
-    //   audio: 'Assets/cancion2',
-    //   lyrics: [
-    //     { time: 0, text: "Primera línea" },
-    //     { time: 4, text: "Segunda línea" },
-    //   ]
-    // },
   ];
 
   // =====================================================================
