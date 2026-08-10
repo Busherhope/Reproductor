@@ -62,6 +62,88 @@
     margin-bottom:28px;
   }
 
+  /* ---------- pestañas Música / Fotos ---------- */
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:24px;
+  }
+  .tab-btn{
+    border:none;
+    background:rgba(255,255,255,.06);
+    color:var(--line-past);
+    font-size:13px;
+    font-weight:700;
+    padding:8px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tab-btn.active{
+    background:var(--line-active);
+    color:#000;
+  }
+
+  /* ---------- galería de fotos ---------- */
+  .photo-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+    gap:16px;
+  }
+  .photo-card{
+    aspect-ratio:1/1;
+    border-radius:14px;
+    overflow:hidden;
+    cursor:pointer;
+    background-color:#1a1a1e;
+    box-shadow:0 12px 26px rgba(0,0,0,.45);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .photo-card img{
+    width:100%;height:100%;
+    object-fit:cover;
+    display:block;
+    transition:transform .2s ease;
+  }
+  .photo-card:hover img{transform:scale(1.05);}
+
+  .lightbox{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.92);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    padding:24px;
+  }
+  .lightbox.hidden{display:none;}
+  .lightbox img{
+    max-width:100%;
+    max-height:78vh;
+    border-radius:14px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6);
+  }
+  .lightbox-caption{
+    margin-top:16px;
+    color:var(--line-active);
+    font-size:14px;
+    text-align:center;
+    max-width:600px;
+  }
+  .lightbox-close{
+    position:absolute;
+    top:20px;right:20px;
+    width:36px;height:36px;
+    border-radius:50%;
+    border:none;
+    background:rgba(255,255,255,.1);
+    color:var(--line-active);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+
   .track-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
@@ -291,6 +373,10 @@
       grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));
       gap:18px;
     }
+    .photo-grid{
+      grid-template-columns:repeat(auto-fill, minmax(110px, 1fr));
+      gap:12px;
+    }
     .player{
       grid-template-columns:1fr;
       grid-template-rows:auto 1fr;
@@ -332,9 +418,24 @@
 
   <!-- ===== BIBLIOTECA: MENÚ PARA ELEGIR CANCIÓN ===== -->
   <div class="library" id="library">
+    <div class="tabs">
+      <button class="tab-btn active" id="tabMusic">Música</button>
+      <button class="tab-btn" id="tabPhotos">Fotos</button>
+    </div>
     <div class="library-header">Tu música</div>
     <div class="library-sub">Elige una canción para reproducir</div>
     <div class="track-grid" id="trackGrid"></div>
+  </div>
+
+  <!-- ===== GALERÍA: FOTOS ===== -->
+  <div class="library hidden" id="gallery">
+    <div class="tabs">
+      <button class="tab-btn" id="tabMusic2">Música</button>
+      <button class="tab-btn active" id="tabPhotos2">Fotos</button>
+    </div>
+    <div class="library-header">Nuestras fotos</div>
+    <div class="library-sub">Toca una foto para verla en grande</div>
+    <div class="photo-grid" id="photoGrid"></div>
   </div>
 
   <!-- ===== REPRODUCTOR ===== -->
@@ -376,6 +477,15 @@
     </div>
   </div>
 
+  <!-- ===== VISOR DE FOTO (LIGHTBOX) ===== -->
+  <div class="lightbox hidden" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.4 1.42 6.29 6.29-6.29 6.29 1.4 1.42L12 14.83l6.3 6.3 1.4-1.42-6.29-6.29 6.29-6.29z"/></svg>
+    </button>
+    <img id="lightboxImg" src="" alt="">
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+
 </div>
 
 <audio id="audio" preload="auto"></audio>
@@ -394,8 +504,8 @@
       id: 'how-much-longer',
       title: 'How Much Longer?',
       artist: 'Alexander 23',
-      cover: 'assets/Portada.jpg',
-      audio: 'assets/how-much-longer.mp3',
+      cover: 'Assets/Portada.jpg',
+      audio: 'Assets/How-Much-Longer_.mp3',
       lyrics: [
         { time: 14,   text: "Lo intento tanto" },
         { time: 17,   text: "¿Te he asustado?" },
@@ -445,8 +555,8 @@
       id: 'give-me-a-sign',
       title: 'Give Me a Sign',
       artist: 'Bryant Barnes',
-      cover: 'assets/Portada2.jpg',
-      audio: 'assets/Give-Me-A-Sign.mp3',
+      cover: 'Assets/Portada2.jpg',
+      audio: 'Assets/Give-Me-A-Sign.mp3',
       lyrics: [
         { time: 14,   text: "Lo intento tanto" },
         { time: 17,   text: "¿Te he asustado?" },
@@ -455,9 +565,32 @@
   ];
 
   // =====================================================================
+  //  1B) TUS FOTOS VAN AQUÍ
+  //  Cada foto es un objeto con: src (ruta dentro de /assets) y caption
+  //  (opcional, un texto debajo de la foto al abrirla en grande).
+  //  Sube tus imágenes a la carpeta Assets en GitHub y agrega un renglón
+  //  por cada una.
+  // =====================================================================
+  const PHOTOS = [
+    // { src: 'Assets/foto1.jpg', caption: 'Un texto opcional aquí' },
+    // { src: 'Assets/foto2.jpg', caption: '' },
+  ];
+
+  // =====================================================================
   //  2) LÓGICA DE LA APP (no hace falta tocar nada de aquí en adelante)
   // =====================================================================
   const libraryEl = document.getElementById('library');
+  const galleryEl = document.getElementById('gallery');
+  const photoGrid = document.getElementById('photoGrid');
+  const tabMusic = document.getElementById('tabMusic');
+  const tabPhotos = document.getElementById('tabPhotos');
+  const tabMusic2 = document.getElementById('tabMusic2');
+  const tabPhotos2 = document.getElementById('tabPhotos2');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCaption = document.getElementById('lightboxCaption');
+  const lightboxClose = document.getElementById('lightboxClose');
+
   const playerEl = document.getElementById('player');
   const trackGrid = document.getElementById('trackGrid');
   const backBtn = document.getElementById('backBtn');
@@ -492,6 +625,48 @@
     card.addEventListener('click', () => openTrack(track));
     trackGrid.appendChild(card);
   });
+
+  // ---------- construir la galería de fotos ----------
+  if (PHOTOS.length === 0){
+    photoGrid.innerHTML = '<div style="color:var(--line-past);font-size:14px;">Todavía no hay fotos. Agrégalas en el array PHOTOS del código.</div>';
+  } else {
+    PHOTOS.forEach((photo) => {
+      const card = document.createElement('div');
+      card.className = 'photo-card';
+      card.innerHTML = `<img src="${photo.src}" alt="${photo.caption || 'Foto'}" loading="lazy">`;
+      card.addEventListener('click', () => openLightbox(photo));
+      photoGrid.appendChild(card);
+    });
+  }
+
+  function openLightbox(photo){
+    lightboxImg.src = photo.src;
+    lightboxImg.alt = photo.caption || 'Foto';
+    lightboxCaption.textContent = photo.caption || '';
+    lightbox.classList.remove('hidden');
+  }
+  function closeLightbox(){
+    lightbox.classList.add('hidden');
+    lightboxImg.src = '';
+  }
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  // ---------- cambio de pestañas Música / Fotos ----------
+  function showMusic(){
+    galleryEl.classList.add('hidden');
+    libraryEl.classList.remove('hidden');
+  }
+  function showPhotos(){
+    libraryEl.classList.add('hidden');
+    galleryEl.classList.remove('hidden');
+  }
+  tabMusic.addEventListener('click', showMusic);
+  tabMusic2.addEventListener('click', showMusic);
+  tabPhotos.addEventListener('click', showPhotos);
+  tabPhotos2.addEventListener('click', showPhotos);
 
   function openTrack(track){
     // datos visuales
